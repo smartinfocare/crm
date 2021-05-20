@@ -10,6 +10,8 @@ const mongoose = require('mongoose');
 
 //read the model of colletion
 const User = require('./app/models/user.model');
+const Role = require('./app/models/role.model');
+const Team = require('./app/models/team.model');
  
 mongoose.Promise = global.Promise;
 // Connecting to the database
@@ -22,6 +24,8 @@ mongoose.connect(dbConfig.url, { useNewUrlParser: true, useUnifiedTopology: true
     });
 
 require('./app/routes/user.router.js')(app);
+require('./app/routes/role.router.js')(app);
+require('./app/routes/team.router.js')(app);
 // Create a Server
 const server = app.listen(8080, function () {
  

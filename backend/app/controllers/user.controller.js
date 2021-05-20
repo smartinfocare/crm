@@ -48,8 +48,7 @@ exports.users = (req, res) => {
 
 
 exports.getUserById = (req , res )=>{
-  User.findById(req.params.id).select('-__v')
-  .then(user => {
+  User.findById(req.params.id).populate("role").then(user => {
     res.status(200).json(user);
   }).catch(err => {
       if(err.kind === 'ObjectId') {
@@ -82,8 +81,11 @@ exports.updateRole = (req, res) => {
                   message: "Error -> Can NOT update a user role with id = " + req.body.id,
                   error: "Not Found!"
               });
-          }
-          res.status(200).json(user);
+          } 
+        res.status(200).send({
+        data:user,
+        message:"role updated successfully"
+          });
       }).catch(err => {
           return res.status(500).send({
             message: "Error -> Can not update a user role with id = " + req.body.id,
@@ -98,21 +100,24 @@ exports.updateStatus = (req, res) => {
   User.findByIdAndUpdate(
                     req.body._id, 
                     {
-                      status: req.body.status,
+                      isEnabled: req.body.isEnabled,
                     }, 
                       {new: true}
                   ).select('-__v')
       .then(user => {
           if(!user) {
               return res.status(404).send({
-                  message: `Error -> Can NOT  ${req.body.status}  user with id = " + ${req.body._id}`,
+                  message: `Error -> Can NOT  ${req.body.isEnabled}  user with id = " + ${req.body._id}`,
                   error: "Not Found!"
               });
           }
-          res.status(200).json(user);
+          res.status(200).send({
+            data:user,
+            message:`user ablity is set to ${user.isEnabled}` 
+          });
       }).catch(err => {
           return res.status(500).send({
-            message: `Error -> Can NOT  ${req.body.status}  user with id = " + ${req.body._id}`,
+            message: `Error -> Can NOT  ${req.body.isEnabled}  user with id = " + ${req.body._id}`,
             error: err.message
           });
       });
@@ -160,12 +165,12 @@ exports.LoginWithPassword = async (req,res)=>{
   let password = req.body.password;
   let resp = await User.findOne({email:req.body.email});
   if(resp){
+  if(resp && resp.isEnabled == true){
   let checkPassword = await bcrypt.compare(password, resp.password)
-
-let secret ="fuhguidskjgbvh8que823uy8hfuir295r2rff1541f32103210f231f354";
-const token = jwt.sign({ sub: resp._id }, secret, { expiresIn: '7d' });
   if(checkPassword){
-res.status(200).send({
+    let secret ="fuhguidskjgbvh8que823uy8hfuir295r2rff1541f32103210f231f354";
+    const token = jwt.sign({ sub: resp._id }, secret, { expiresIn: '7d' });
+  res.status(200).send({
   message:"welcome to smartinfo care solution",
   Token:token
 })
@@ -174,6 +179,11 @@ res.status(200).send({
       message:"the password is not match"
     })
   }
+}else{
+  res.status(403).send({
+    error:"you are not enabled for login"
+  })
+}
   }else{
     res.status(404).send({
       message:"you are not register in our records"

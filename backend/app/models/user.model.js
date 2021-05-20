@@ -4,11 +4,14 @@ const UserSchema = mongoose.Schema({
     name: {type:String,required:true},
     email:  { type: String, index: true, unique: true, required: true },
     mobileNumber: Number,
-    status:{
-        type: String,
-        default: 'enabled'
+    isEnabled:{
+        type: Boolean,
+        default: true
       } ,
-    role:String,
+    role:{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Role"
+      },
     otp:{
         type:String,
         default:null
