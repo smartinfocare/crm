@@ -1,18 +1,17 @@
 const nodemailer = require("nodemailer");
 module.exports = {
-  sendOtpMail
+  sendOtpMail,
 };
 
 async function sendOtpMail(payload) {
-
   let transporter = nodemailer.createTransport({
-    service:"gmail",
+    service: "gmail",
     host: "smtp.gmail.com",
-    port: 465,  
+    port: 465,
     secure: false,
     auth: {
-      user:'sicsdev21@gmail.com',
-      pass: 'broCode@123',
+      user: "sicsdev21@gmail.com",
+      pass: "broCode@123",
     },
   });
 
@@ -176,11 +175,9 @@ async function sendOtpMail(payload) {
               </table>
           </body>
         
-          </html>`
-    ,
+          </html>`,
   });
 
-    console.log("Message sent: %s", info.messageId);
-    console.log("Preview URL: %s", nodemailer.getTestMessageUrl(info));
-  }
-
+  console.log("Message sent: %s", info.messageId);
+  console.log("Preview URL: %s", nodemailer.getTestMessageUrl(info));
+}
