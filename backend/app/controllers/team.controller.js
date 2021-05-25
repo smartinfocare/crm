@@ -33,7 +33,6 @@ exports.teams = async (req, res) => {
         if (findTeam) {
           return res.status(200).json({
             status: true,
-            message: false,
             data:findTeam
           });
         } else {

@@ -1,6 +1,7 @@
 const Lead = require("../models/lead.model");
 const { onError } = require("../middleware/error-handler");
-
+const Role = require("../models/role.model");
+const Team = require("../models/team.model");
 exports.createLead = async (req, res) => {
   try {
     let user = "Admin";
@@ -21,7 +22,7 @@ exports.createLead = async (req, res) => {
       const findLead = await Lead.findOne({ email: email });
       if (!findLead) {
         if (user === "Admin") {
-          const lead = new Lead(payload);
+          const lead = await new Lead(payload);
           const resp = await lead.save();
           if (resp) {
             return res.status(200).json({
@@ -58,20 +59,76 @@ exports.createLead = async (req, res) => {
   }
 };
 
-exports.getLeads = (req, res) => {
+exports.getLeads = async (req, res) => {
+  let roleId = req.user.role._id;
+  let userId = req.user._id;
   try {
-    Lead.find().populate('status').populate('source').populate('assignUser').populate('assignTeam')
-      .select("-__v")
-      .then((data) => {
-        res.status(200).json(data);
-      })
-      .catch((error) => {
-        console.log(error);
-        res.status(500).json({
-          message: "Error!",
-          error: error,
+    const role = await Role.findOne({ _id: roleId });
+    if (
+      role.title == process.env.SUPER_ADMIN ||
+      role.title == process.env.ADMIN
+    ) {
+      const resp = await Lead.find()
+        .populate("status")
+        .populate("source")
+        .populate("assignUser")
+        .populate("assignTeam");
+      if (resp) {
+        return res.status(200).json({
+          status: true,
+          message: "data found",
+          data: resp,
         });
-      });
+      } else {
+        return res.status(404).json({
+          status: false,
+          message: "no data found",
+        });
+      }
+    } else {
+      if (
+        role.title == process.env.SIMPLE_USER ||
+        role.title == process.env.SENIOR_USER
+      ) {
+        const findTeam = await Team.find({ teamLeader: userId }).populate(
+          "teamLeader"
+        );
+        const findLead = await Lead.find({ assignUser: userId })
+          .populate("status")
+          .populate("source")
+          .populate("assignUser")
+          .populate("assignTeam");
+        if (findLead) {
+          for (let i = 0; i < findTeam.length; i++) {
+            const element = findTeam[i];
+            const findMyTeamLead = await Lead.findOne({
+              assignTeam: element._id,
+            })
+              .populate("status")
+              .populate("source")
+              .populate("assignUser")
+              .populate("assignTeam");
+            if (findMyTeamLead) {
+              findLead.push(findMyTeamLead);
+            }
+          }
+          return res.status(200).json({
+            status: true,
+            data: findLead,
+          });
+        } else {
+          return res.status(404).json({
+            status: false,
+            message: "data not found",
+          });
+        }
+      } else {
+        return res.status(401).json({
+          status: false,
+          message: "you are not authorized",
+        });
+      }
+    }
   } catch (error) {
     return onError(req, res, error);
   }
