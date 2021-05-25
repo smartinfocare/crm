@@ -1,3 +1,4 @@
+require('dotenv').config()
 var express = require('express');
 const cors = require('cors')
 var app = express();
@@ -5,10 +6,11 @@ app.use(cors());
 var bodyParser = require('body-parser');
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+var cookieParser = require('cookie-parser')
+ app.use(cookieParser())
 // Configuring the database
 const dbConfig = require('./app/config/mongodb.config.js');
 const mongoose = require('mongoose');
-
 //read the model of colletion
 const User = require('./app/models/user.model');
 const Role = require('./app/models/role.model');
@@ -33,6 +35,7 @@ require('./app/routes/team.router.js')(app);
 require('./app/routes/source.router.js')(app);
 require('./app/routes/status.router.js')(app);
 require('./app/routes/lead.router.js')(app);
+require('./app/routes/login.router')(app)
 // Create a Server
 const server = app.listen(8080, function () {
  

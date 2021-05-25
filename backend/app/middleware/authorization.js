@@ -1,21 +1,42 @@
-const jwt = require("express-jwt");
+const jwt = require("jsonwebtoken");
 const User = require("../models/user.model");
-module.exports = authorize;
-
-function authorize() {
-  const secret = "fuhguidskjgbvh8que823uy8hfuir295r2rff1541f32103210f231f354";
-  return [
-    // authenticate JWT token and attach decoded token to request as req.user
-    jwt({ secret, algorithms: ["HS256"] }),
-    // attach full user record to request object
-    async (req, res, next) => {
-      // get user with id from token 'sub' (subject) property
-      const user = await User.findById(req.user.sub);
-      // check user still exists
-      if (!user) return res.status(401).json({ message: "Unauthorized" });
-      // authorization successful
-      req.user = user.get();
-      next();
-    },
-  ];
-}
+module.exports = {
+  validateToken: async (req, res, next) => {
+    let cookie = req.cookies['jwt'];
+    const authorizationHeaader = cookie;
+    let result;
+    if (authorizationHeaader) {
+      const token = req.headers.authorization.split(" ")[1]; // Bearer <token>
+      const options = {
+        expiresIn: "2d",
+      };
+      try {
+        // verify makes sure that the token hasn't expired and has been issued by us
+        result = await jwt.verify(token, process.env.SECRET_KEY, options);
+        // Let's pass back the decoded token to the request object
+        if (result) {
+          // We call next to pass execution to the subsequent middleware
+          const user = await (
+            await User.findOne({ _id: result.sub })
+          ).populate("role");
+          req.user = user;
+          next();
+        } else {
+          return res.status(401).json({
+            status: false,
+            message: "the given token is not valid",
+          });
+        }
+      } catch (err) {
+        // Throw an error just in case anything goes wrong with verification
+        throw new Error(err);
+      }
+    } else {
+      result = {
+        error: `Authentication error. Token required.`,
+        status: 401,
+      };
+      res.status(401).send(result);
+    }
+  },
+};

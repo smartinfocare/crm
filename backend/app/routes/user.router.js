@@ -7,5 +7,4 @@ module.exports = function (app) {
   app.put("/api/updateStatus", users.updateStatus);
   // app.post('/api/login',users.loginUserByOtp);
   app.post("/api/setPassword/:key", users.setPassword);
-  app.post("/api/loginWithPassword", users.LoginWithPassword);
 };

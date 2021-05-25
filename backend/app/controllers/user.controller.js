@@ -5,7 +5,6 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 var rand = require("random-key");
 
-
 exports.createUser = async (req, res) => {
   try {
     let email = await User.findOne({ email: email });
@@ -156,9 +155,8 @@ exports.updateStatus = (req, res) => {
       });
   } catch (error) {
     return onError(req, res, error);
-  }
+   }
 };
-
 
 exports.setPassword = async (req, res) => {
   try {
@@ -176,43 +174,6 @@ exports.setPassword = async (req, res) => {
       } else {
         res.status(400).send({
           message: "bad request please try again",
-        });
-      }
-    } else {
-      res.status(404).send({
-        message: "you are not register in our records",
-      });
-    }
-  } catch (error) {
-    return onError(req, res, error);
-  }
-};
-
-exports.LoginWithPassword = async (req, res) => {
-  try {
-    let password = req.body.password;
-    let resp = await User.findOne({ email: req.body.email });
-    if (resp) {
-      if (resp && resp.isEnabled == true) {
-        let checkPassword = await bcrypt.compare(password, resp.password);
-        if (checkPassword) {
-          let secret =
-            "fuhguidskjgbvh8que823uy8hfuir295r2rff1541f32103210f231f354";
-          const token = jwt.sign({ sub: resp._id }, secret, {
-            expiresIn: "7d",
-          });
-          res.status(200).send({
-            message: "welcome to smartinfo care solution",
-            Token: token,
-          });
-        } else {
-          res.status(400).send({
-            message: "the password is not match",
-          });
-        }
-      } else {
-        res.status(403).send({
-          error: "you are not enabled for login",
         });
       }
     } else {

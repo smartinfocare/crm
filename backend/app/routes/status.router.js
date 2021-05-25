@@ -3,3 +3,4 @@ module.exports = function (app) {
   app.post("/api/status", status.createStatus);
   app.get("/api/status", status.getStatus);
 };
+ 

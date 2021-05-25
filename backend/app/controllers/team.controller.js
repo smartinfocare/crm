@@ -2,22 +2,53 @@ const Team = require("../models/team.model");
 const User = require("../models/user.model");
 const { sendTeamMail } = require("../service/teamMailService");
 const { onError } = require("../middleware/error-handler");
+const Role = require("../models/role.model");
+const e = require("express");
 
-exports.teams = (req, res) => {
+exports.teams = async (req, res) => {
+  let roleId = req.user.role._id;
+  let userId = req.user._id;
   try {
-    Team.find()
-      .populate("teamLeader")
-      .select("-__v")
-      .then((data) => {
-        res.status(200).json(data);
-      })
-      .catch((error) => {
-        console.log(error);
-        res.status(500).json({
-          message: "Error!",
-          error: error,
+    const role = await Role.findOne({ _id: roleId });
+    if (role.title == process.env.SUPER_ADMIN ||role.title == process.env.ADMIN) {
+      const resp = await Team.find().populate("teamLeader");
+      if (resp) {
+        return res.status(200).json({
+          status: true,
+          message: "data found",
+          data: resp,
         });
-      });
+      } else {
+        return res.status(404).json({
+          status: false,
+          message: "no data found",
+        });
+      }
+    } 
+    else {
+      if (role.title == process.env.SIMPLE_USER || role.title == process.env.SENIOR_USER) {
+        const findTeam = await Team.find({ teamLeader: userId }).populate(
+          "teamLeader"
+        );
+        if (findTeam) {
+          return res.status(200).json({
+            status: true,
+            message: false,
+            data:findTeam
+          });
+        } else {
+          return res.status(404).json({
+            status: false,
+            message: "you are not any team leader",
+          });
+        }
+      }else{
+        return res.status(401).json({
+          status:false,
+          message:"you are not authorized"
+        })
+      }
+    }
   } catch (error) {
     return onError(req, res, error);
   }
