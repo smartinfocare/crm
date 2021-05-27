@@ -6,4 +6,6 @@ module.exports = function (app) {
   app.delete("/api/lead/:id", lead.deleteLeadById);
   app.get("/api/lead/:id", lead.getLeadById);
   app.put("/api/lead/:id", lead.updateLeadById);
+  app.put("/api/changeLeadStatus", lead.changeLeadStatus);
+  app.put("/api/changeLeadSource", lead.changeLeadSource);
 };

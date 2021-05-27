@@ -2,6 +2,7 @@ const Lead = require("../models/lead.model");
 const { onError } = require("../middleware/error-handler");
 const Role = require("../models/role.model");
 const Team = require("../models/team.model");
+const e = require("express");
 exports.createLead = async (req, res) => {
   try {
     let user = "Admin";
@@ -93,23 +94,42 @@ exports.getLeads = async (req, res) => {
         const findTeam = await Team.find({ teamLeader: userId }).populate(
           "teamLeader"
         );
-        const findLead = await Lead.find({ assignUser: userId })
-          .populate("status")
-          .populate("source")
-          .populate("assignUser")
-          .populate("assignTeam");
-        if (findLead) {
+        if (findTeam.length != 0) {
+          const findLead = await Lead.find({ assignUser: userId })
+            .populate("status")
+            .populate("source")
+            .populate("assignUser")
+            .populate("assignTeam");
           for (let i = 0; i < findTeam.length; i++) {
             const element = findTeam[i];
-            const findMyTeamLead = await Lead.findOne({
+            let members = element.members;
+            const findMyTeamLead = await Lead.find({
               assignTeam: element._id,
             })
               .populate("status")
               .populate("source")
               .populate("assignUser")
               .populate("assignTeam");
-            if (findMyTeamLead) {
-              findLead.push(findMyTeamLead);
+            if (findMyTeamLead.length != 0) {
+              findMyTeamLead.map(async (ele) => {
+                findLead.push(ele);
+              });
+            }
+            if (members.length != 0) {
+              members.map(async (member) => {
+                const findMyUserLead = await Lead.find({
+                  assignUser: member,
+                })
+                  .populate("status")
+                  .populate("source")
+                  .populate("assignUser")
+                  .populate("assignTeam");
+                if (findMyUserLead.length != 0) {
+                  findMyUserLead.map(async (user) => {
+                    findLead.push(user);
+                  });
+                }
+              });
             }
           }
           return res.status(200).json({
@@ -117,10 +137,22 @@ exports.getLeads = async (req, res) => {
             data: findLead,
           });
         } else {
-          return res.status(404).json({
-            status: false,
-            message: "data not found",
-          });
+          const findLead = await Lead.find({ assignUser: userId })
+            .populate("status")
+            .populate("source")
+            .populate("assignUser")
+            .populate("assignTeam");
+          if (findLead) {
+            return res.status(200).json({
+              status: true,
+              data: findLead,
+            });
+          } else {
+            return res.status(404).json({
+              status: false,
+              message: "no data found",
+            });
+          }
         }
       } else {
         return res.status(401).json({
@@ -202,25 +234,69 @@ exports.updateLeadById = async (req, res) => {
   }
 };
 
-exports.getLeadById = (req, res) => {
+exports.getLeadById = async (req, res) => {
+  let id = req.params.id;
   try {
-    Lead.findById(req.params.id)
-      .then((lead) => {
-        res.status(200).json(lead);
-      })
-      .catch((err) => {
-        if (err.kind === "ObjectId") {
-          return res.status(404).send({
-            message: "lead not found with id " + req.params.id,
-            error: err,
-          });
-        }
-        return res.status(500).send({
-          message: "Error retrieving user with id " + req.params.id,
-          error: err,
-        });
+    const findLead = await Lead.findOne({ _id: id }).populate("status")
+    .populate("source")
+    .populate("assignUser")
+    .populate("assignTeam");;
+    if (findLead) {
+      return res.status(200).json({
+        status: true,
+        data: findLead,
       });
+    } else {
+      return res.status(404).json({
+        status: false,
+        message: "data not found",
+      });
+    }
   } catch (error) {
     return onError(req, res, error);
+  }
+};
+
+exports.changeLeadStatus = async (req, res) => {
+  try {
+    const updateData = await Lead.updateOne(
+      { _id: req.body._id },
+      { status: req.body.status }
+    );
+    if (updateData.ok == 1) {
+      return res.status(200).json({
+        status: true,
+        message: "status updated successfully",
+      });
+    } else {
+      return res.status(400).json({
+        status: false,
+        message: "bad request data not updated",
+      });
+    }
+  } catch (error) {
+    onError(req, res, error);
+  }
+};
+
+exports.changeLeadSource = async (req, res) => {
+  try {
+    const updateData = await Lead.updateOne(
+      { _id: req.body._id },
+      { source: req.body.source }
+    );
+    if (updateData.ok == 1) {
+      return res.status(200).json({
+        status: true,
+        message: "source updated successfully",
+      });
+    } else {
+      return res.status(400).json({
+        status: false,
+        message: "bad request data not updated",
+      });
+    }
+  } catch (error) {
+    onError(req, res, error);
   }
 };

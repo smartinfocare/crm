@@ -4,6 +4,7 @@ const { onError } = require("../middleware/error-handler");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 var rand = require("random-key");
+const Team = require("../models/team.model");
 
 exports.createUser = async (req, res) => {
   try {
@@ -185,3 +186,13 @@ exports.setPassword = async (req, res) => {
     return onError(req, res, error);
   }
 };
+
+
+exports.getUsersOfTeam = async (req,res) =>{
+  let id = req.user._id;
+  try {
+    const getTeam = await Team.find({_id:id});
+  } catch (error) {
+    
+  }
+}
