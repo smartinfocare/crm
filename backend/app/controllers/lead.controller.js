@@ -3,6 +3,7 @@ const { onError } = require("../middleware/error-handler");
 const Role = require("../models/role.model");
 const Team = require("../models/team.model");
 const e = require("express");
+
 exports.createLead = async (req, res) => {
   try {
     let user = "Admin";
@@ -237,10 +238,11 @@ exports.updateLeadById = async (req, res) => {
 exports.getLeadById = async (req, res) => {
   let id = req.params.id;
   try {
-    const findLead = await Lead.findOne({ _id: id }).populate("status")
-    .populate("source")
-    .populate("assignUser")
-    .populate("assignTeam");;
+    const findLead = await Lead.findOne({ _id: id })
+      .populate("status")
+      .populate("source")
+      .populate("assignUser")
+      .populate("assignTeam");
     if (findLead) {
       return res.status(200).json({
         status: true,
@@ -294,6 +296,25 @@ exports.changeLeadSource = async (req, res) => {
       return res.status(400).json({
         status: false,
         message: "bad request data not updated",
+      });
+    }
+  } catch (error) {
+    onError(req, res, error);
+  }
+};
+
+exports.getAllLeads = async (req, res) => {
+  try {
+    const resp = await Lead.find();
+    if (resp) {
+      return res.status(200).json({
+        status: true,
+        data: resp,
+      });
+    } else {
+      return res.status(404).json({
+        status: false,
+        message: "no data found",
       });
     }
   } catch (error) {

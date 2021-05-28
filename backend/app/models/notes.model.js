@@ -3,13 +3,14 @@ const mongoose = require("mongoose");
 const NotesSchema = mongoose.Schema(
   {
     subject: { type: String },
-    doc:{type:String},
-    deal: {
+    title: { type: String },
+    docs:{type:String},
+    lead: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Lead",
         default: null,
       },
-    addedBy: {
+    addedBy: {  
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       default: null,

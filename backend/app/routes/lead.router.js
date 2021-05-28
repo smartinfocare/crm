@@ -8,4 +8,6 @@ module.exports = function (app) {
   app.put("/api/lead/:id", lead.updateLeadById);
   app.put("/api/changeLeadStatus", lead.changeLeadStatus);
   app.put("/api/changeLeadSource", lead.changeLeadSource);
+  app.get("/api/getAllLeads",validateToken, lead.getAllLeads);
 };
+  
